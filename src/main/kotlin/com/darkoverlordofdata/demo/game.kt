@@ -27,14 +27,16 @@ class Game(val width: Int, val height: Int) {
     var mouse = Mouse(0, 0, false)
 
     init {
-        srand(time(null).toInt())
+        // srand(time(null).toInt())
+        srand(time(null).toUInt())
         
         if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
             println("SDL_Init Error: ${get_SDL_Error()}")
             throw Error()
         }
 
-        if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
+        // if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
+        if (IMG_Init(IMG_INIT_PNG.toInt()) != IMG_INIT_PNG.toInt()) {
             println("Unable to init image")
             throw Error()
         }
@@ -42,7 +44,8 @@ class Game(val width: Int, val height: Int) {
             println("Unable to init truetype fonts")
             throw Error()
         }
-        if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT.toShort(), 2, 2048) == -1) {
+        // if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT.toShort(), 2, 2048) == -1) {
+        if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 2048) == -1) {
             println("Unable to init mixer")
             throw Error()
         }
