@@ -21,9 +21,4 @@ vscode
 * ctrl-B to build
 * F5 to run (uses cpp extension)
 
-Testing src/main/kotlin/darkoverlordofdata/demo
 
-start msys2 mingw 64 bit:
-
-cd /c/Users/darko/Documents/GitHub/kotlin-native-test/build/konan/bin/mingw_x64
-./shmupwarz
