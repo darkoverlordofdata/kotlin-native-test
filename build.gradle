@@ -1,0 +1,79 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven {
+            url "https://dl.bintray.com/jetbrains/kotlin-native-dependencies"
+        }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-native-gradle-plugin:0.8"
+    }
+}
+
+def libName = [ 'SDL2', 'SDL2_image', 'SDL2_ttf', 'SDL2_mixer' ]
+
+apply plugin: 'konan'
+
+konan.targets = ['mingw', 'linux', 'raspberrypi', 'macbook' ]
+
+konanArtifacts {
+
+    interop ('sdl') {
+        defFile 'src/main/c_interop/sdl.def'
+        packageName 'sdl'
+
+        target 'mingw', {
+            includeDirs 'c:/msys64/mingw64/include/SDL2/'
+        }
+
+        target 'linux', {
+            includeDirs '/usr/include/SDL2/'
+        }
+
+        target 'macbook', {
+            includeDirs '/usr/local/include/SDL2/'
+        }
+        
+        target 'raspberrypi', {
+            includeDirs '/usr/include/SDL2'
+        }
+    }
+
+    program ('shmupwarz') {
+        libraries {
+            artifact 'sdl'
+        }
+
+        target 'mingw', {
+            linkerOpts '-mwindows'
+            linkerOpts '-Lc:/msys64/mingw64/lib'
+            libName.each { linkerOpts "-l${it}" }
+        }
+
+        target 'macbook', {
+            linkerOpts "-L/usr/local/lib"
+            libName.each { linkerOpts "-l${it}" }
+        }
+
+        target 'linux', {
+            linkerOpts '-L/usr/lib/x86_64-linux-gnu'
+            libName.each { linkerOpts "-l${it}" }
+        }
+
+        target 'raspberrypi', {
+            libName.each { linkerOpts "-l${it}" }
+        }
+    }
+}
+
+compileKonan {
+    doLast {
+        konanArtifacts.shmupwarz.forEach { task ->
+            copy {
+                from 'assets'
+                into "${task.artifact.parentFile}/assets"
+            }
+        }
+    }
+}
