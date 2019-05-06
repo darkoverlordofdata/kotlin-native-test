@@ -1,4 +1,4 @@
-# kotlin-native-sdl2
+# kotlin-native-test
 
 work in progress using kotlin native on linux/windows. 
 
@@ -20,5 +20,9 @@ growing pains
 vscode
 * ctrl-B to build
 * F5 to run (uses cpp extension)
+
+prototype
+
+use the embedded cppdemo
 
 
