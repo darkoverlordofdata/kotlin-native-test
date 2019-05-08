@@ -15,18 +15,20 @@ class ShmupWarz(var renderer: CPointer<SDL_Renderer>, val width: Int, val height
     var pressed = mutableSetOf<SDL_Keycode>()
     var deactivate = mutableListOf<Int>()
     var running: Boolean = false
-    var bullets = mutableListOf<Point2>()
-    var enemies1 = mutableListOf<Point2>()
-    var enemies2 = mutableListOf<Point2>()
-    var enemies3 = mutableListOf<Point2>()
-    var explosions = mutableListOf<Point2>()
-    var bangs = mutableListOf<Point2>()
-    var particles = mutableListOf<Point2>()
+    var bullets = listOf<Point2>()
+    var enemies1 = listOf<Point2>()
+    var enemies2 = listOf<Point2>()
+    var enemies3 = listOf<Point2>()
+    var explosions = listOf<Point2>()
+    var bangs = listOf<Point2>()
+    var particles:List<Point2> = listOf<Point2>()
     val FONT = "assets/fonts/OpenDyslexic-Bold.otf"
     var delta = 0.0
     val sys: Systems by lazy { Systems(this) }
     val font: CPointer<_TTF_Font> by lazy { TTF_OpenFont(FONT, 28)!! }
-    val entities: List<Entity> by lazy { Entities.createLevel(renderer) }
+
+    lateinit var entities: List<Entity>
+    init { entities = Entities.createLevel(renderer) }
 
     val isRunning get() = running
     val rect = pool.alloc<SDL_Rect>()
@@ -34,16 +36,16 @@ class ShmupWarz(var renderer: CPointer<SDL_Renderer>, val width: Int, val height
     val pass: Unit = Unit
 
     /** message queues */  
-    fun removeEntity(id:Int) { deactivate.add(id) }
-    fun addBullet(x:Double, y:Double) { listOf(Point2(x, y)) + bullets }
-    fun addExplosion(x:Double, y:Double) { listOf(Point2(x, y)) + explosions }
-    fun addBang(x:Double, y:Double) { listOf(Point2(x, y)) + bangs }
-    fun addParticle(x:Double, y:Double) { listOf(Point2(x, y)) + particles }
+    fun removeEntity(id:Int)                { deactivate.add(id) }
+    fun addBullet(x:Double, y:Double)       { bullets =     listOf(Point2(x, y)) + bullets }
+    fun addExplosion(x:Double, y:Double)    { explosions =  listOf(Point2(x, y)) + explosions }
+    fun addBang(x:Double, y:Double)         { bangs =       listOf(Point2(x, y)) + bangs }
+    fun addParticle(x:Double, y:Double)     { particles =   listOf(Point2(x, y)) + particles }
     fun addEnemy(enemy:Int) {  
         when(enemy) {
-            1 -> listOf(Point2(0.0 , 0.0)) + enemies1
-            2 -> listOf(Point2(0.0 , 0.0)) + enemies2
-            3 -> listOf(Point2(0.0 , 0.0)) + enemies3
+            1 -> enemies1 = listOf(Point2(0.0, 0.0)) + enemies1
+            2 -> enemies2 = listOf(Point2(0.0, 0.0)) + enemies2
+            3 -> enemies3 = listOf(Point2(0.0, 0.0)) + enemies3
             else -> pass
         }
     }
@@ -52,12 +54,29 @@ class ShmupWarz(var renderer: CPointer<SDL_Renderer>, val width: Int, val height
         running = true
     }
 
-    fun draw(fsp:Int) {
+    fun draw(fps:Int) {
+        SDL_RenderClear(renderer)
+        SDL_SetRenderDrawColor(renderer, 0.toUByte(), 0.toUByte(), 0.toUByte(), 255.toUByte())
+        entities.filter{ it.active }.map{ drawEntity(it) }
+        //   drawFps(fps)
+        SDL_RenderPresent(renderer)
         
     }
 
     fun drawEntity(e:Entity) {
 
+        if (e.tint != null)
+            SDL_SetTextureColorMod(e.sprite.texture, e.tint.r, e.tint.g, e.tint.b)
+
+        if (e.category == Category.Background) {
+            SDL_RenderCopy(renderer, e.sprite.texture, null, null) 
+        } else {
+            rect.w = (e.sprite.width * e.scale.x).toInt()
+            rect.h = (e.sprite.height * e.scale.y).toInt()
+            rect.x = (e.position.x - rect.w / 2).toInt()
+            rect.y = (e.position.y - rect.h / 2).toInt()
+            SDL_RenderCopy(renderer, e.sprite.texture, null, rect.ptr.reinterpret()) 
+        }
     }
 
     fun drawFps(fps:Int) {
@@ -65,22 +84,16 @@ class ShmupWarz(var renderer: CPointer<SDL_Renderer>, val width: Int, val height
     }
 
     fun update(delta:Double) {
-        SDL_RenderClear(renderer)
+        sys.spawn(delta)
+        entities = entities
+            .map{ sys.collision(it, delta) }
+            .map{ sys.create(it, delta) }
+            .map{ sys.input(it, delta) }
+            .map{ sys.physics(it, delta) }
+            .map{ sys.expire(it, delta) }
+            .map{ sys.tween(it, delta) }
+            .map{ sys.remove(it, delta) }
 
-        for (e in entities) {
-            if (e.active) {
-                if (e.category == Category.Background) {
-                    SDL_RenderCopy(renderer, e.sprite.texture, null, null)
-                } else {
-                    rect.w = e.sprite.width
-                    rect.h = e.sprite.height
-                    rect.x = e.position.x.toInt()
-                    rect.y = e.position.y.toInt()
-                    SDL_RenderCopy(renderer, e.sprite.texture, null, rect.ptr.reinterpret())
-                }
-            }
-        }
-        SDL_RenderPresent(renderer)
     }
 
     /**
@@ -99,6 +112,11 @@ class ShmupWarz(var renderer: CPointer<SDL_Renderer>, val width: Int, val height
                         when (keyboardEvent.keysym.scancode) {
                             SDL_SCANCODE_ESCAPE -> running = false
                         }
+                        pressed.add(keyboardEvent.keysym.sym)
+                    }
+                    SDL_KEYUP -> {
+                        val keyboardEvent = event.ptr.reinterpret<SDL_KeyboardEvent>().pointed
+                        pressed.remove(keyboardEvent.keysym.sym)
                     }
                     SDL_MOUSEBUTTONUP -> {
                         mouse.pressed = false
@@ -114,10 +132,10 @@ class ShmupWarz(var renderer: CPointer<SDL_Renderer>, val width: Int, val height
                         mouse.x = mouseEvent.x
                         mouse.y = mouseEvent.y
                     }
+                    else -> pass
                 }
             }
         }
     }
-
 }
 

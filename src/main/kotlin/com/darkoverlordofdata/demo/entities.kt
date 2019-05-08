@@ -1,5 +1,6 @@
 package com.darkoverlordofdata.demo
 
+import kotlin.random.*
 import kotlinx.cinterop.*
 import platform.posix.*
 import sdl.*
@@ -253,33 +254,33 @@ object Entities {
             expires = 1.0, 
             sound = Effect.Pew,
             health = Health(2, 2),
-            tint = Color(0xd2.toByte(), 0xfa.toByte(), 0x00.toByte(), 0xffa.toByte()),
+            tint = Color(0xd2.toUByte(), 0xfa.toUByte(), 0x00.toUByte(), 0xffa.toUByte()),
             velocity = Vector2(0.0, -800.0)
         )
     }
     
     
-    fun enemy1(e:Entity, x:Double, y:Double):Entity {
+    fun enemy1(e:Entity, width:Int):Entity {
         return e.copy(
             active = true,
-            position = Point2(x, y),
+            position = Point2(Random.nextInt(width-35).toDouble(), 92.0/2.0),
             velocity = Vector2(0.0, 40.0),
             health = Health(10, 10)
         )
     }
 
-    fun enemy2(e:Entity, x:Double, y:Double):Entity {
+    fun enemy2(e:Entity, width:Int):Entity {
         return e.copy(
             active = true,
-            position = Point2(x, y),
+            position = Point2(Random.nextInt(width-85).toDouble(), 172.0/2.0),
             velocity = Vector2(0.0, 30.0),
             health = Health(20, 20)
         )
     }
 
-    fun enemy3(e:Entity, x:Double, y:Double):Entity {
+    fun enemy3(e:Entity, width:Int):Entity {
         return e.copy(active = true,
-            position = Point2(x, y),
+            position = Point2(Random.nextInt(width-160).toDouble(), 320.0/2.0),
             velocity = Vector2(0.0, 20.0),
             health = Health(60, 60)
         )
@@ -291,7 +292,7 @@ object Entities {
             scale = Vector2(0.5, 0.5),
             sound = Effect.Asplode,
             scaleTween = ScaleTween(0.5/100, 0.5, -3.0, false, true),
-            tint = Color(0xd2.toByte(), 0xfa.toByte(), 0xd2.toByte(), 0xfa.toByte()),
+            tint = Color(0xd2.toUByte(), 0xfa.toUByte(), 0xd2.toUByte(), 0xfa.toUByte()),
             expires = 0.2
         )
     }
@@ -303,24 +304,24 @@ object Entities {
             scale = Vector2(0.2, 0.2),
             sound = Effect.SmallAsplode,
             scaleTween = ScaleTween(0.2/100, 0.2, -3.0, false, true),
-            tint = Color(0xd2.toByte(), 0xfa.toByte(), 0xd2.toByte(), 0xfa.toByte()),
+            tint = Color(0xd2.toUByte(), 0xfa.toUByte(), 0xd2.toUByte(), 0xfa.toUByte()),
             expires = 0.2
         )
     }
 
     fun particle(e:Entity, x:Double, y:Double):Entity {
         val Tau = 6.28318
-        val radians = (rand().toDouble()/1.0) * Tau
-        val magnitude = rand() % 100 + 50
+        val radians = (Random.nextDouble()/1.0) * Tau
+        val magnitude = Random.nextInt(100) + 50
         val velocityX = magnitude.toDouble() * Math.cos(radians)
         val velocityY = magnitude.toDouble() * Math.sin(radians)
-        val scale = (rand() % 10).toDouble() / 10.0
+        val scale = (Random.nextInt(10).toDouble() / 10.0)
         return e.copy(
             active = true,
             position = Point2(x, y),
             scale = Vector2(scale, scale),
             velocity = Vector2(velocityX, velocityY),
-            tint = Color(0xfa.toByte(), 0xfa.toByte(), 0xd2.toByte(), 0xff.toByte()),
+            tint = Color(0xfa.toUByte(), 0xfa.toUByte(), 0xd2.toUByte(), 0xff.toUByte()),
             expires = 0.5
         )
     }

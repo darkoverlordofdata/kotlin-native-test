@@ -8,7 +8,7 @@ import sdl.*
  */
 
 interface IComponent {}
-data class Color(var r:Byte, var g:Byte, var b:Byte, var a:Byte) : IComponent
+data class Color(var r:UByte, var g:UByte, var b:UByte, var a:UByte) : IComponent
 data class Health(var current:Int, var maximum:Int) : IComponent
 data class ScaleTween(var min:Double, var max:Double, var speed:Double, var repeat:Boolean, var active:Boolean) : IComponent
 data class Sprite(var texture:CPointer<SDL_Texture>?, var width: Int, var height: Int) : IComponent
